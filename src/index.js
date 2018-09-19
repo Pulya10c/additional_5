@@ -1,58 +1,44 @@
 module.exports = function check(str, bracketsConfig) {
   // your solution
 
-  if ( typeof str != "string" ) {
-        throw new Error( "'brackets' is not a string" );
-      }
-      if ( str.length % 2 ) {
-        throw new Error( "'brackets' length is not even" );
-      }
+  if(typeof str !== 'string')
+    return false;
+
+  let stack = [],
+      // Сюда можно добавлять свои скобки: ключ - открываемая, значение - закрываемая
+      brackets = {},
+      openRegExp = [],
+      closeRegExp = [],
+      str1 = str;
      
-      var table = {};
-      var bracket, i;
-    
-      for ( i = 0; i < str.length; i++ ) {
+      function ObgBreak (a,b) {
+   
+        brackets[a] = b;
+        
+      };
+      
+      for (let j=0;j<bracketsConfig.length;j++) {
+          ObgBreak (bracketsConfig[j][0],bracketsConfig[j][1]);
+      };
+  
+  // Создаём регулярные выражения для поиска
+  Object.keys(brackets).forEach(e => openRegExp.push(`\\${e}`));
+  openRegExp = new RegExp(openRegExp.join('|'));
+  for(let i in brackets) if(brackets.hasOwnProperty(i)) closeRegExp.push(`\\${brackets[i]}`);
+  closeRegExp = new RegExp(closeRegExp.join('|'));
+  
+  // Добавляем все найденные открывающие скобки в стёк
+  while((tmp = openRegExp.exec(str1)) && (str1 = str1.substr(++tmp.index))) stack.push(tmp[0]);
+  
+  str1 = str;
 
-        if ( table.hasOwnProperty( bracket = str.charAt( i ) ) ) {
-          throw new Error( "non-unique character encountered" );
-
-        }
-
-        table[ bracket ] = {
-          id : i >>> 1,
-          open : !( i % 2 )
-        };
-
-      }
-     
-
-      return function ( string ) {
-        if ( typeof string != "string" ) {
-          throw new Error( "'string' is not a string" );
-        }
-     
-        var stack = [];
-        var bracket, i;
-
-        for ( i = 0; i < string.length; i++ ) {
-          if ( table.hasOwnProperty( bracket = string.charAt( i ) ) ) {
-            if ( table[ bracket ].open ) {
-
-              stack.push( table[ bracket ].id );
-
-            }
-
-            else  if ( stack.length == 0 || stack.pop() != table[ bracket ].id ) {
-
-              return false;
-            }
-
-          }
-
-        }
-     
-        return stack.length == 0;
-
-      }
+  // Если нашли какую-то закрывающую скобку
+  while((tmp = closeRegExp.exec(str1)) && (str1 = str1.substr(++tmp.index)))
+    // То проверяем: Или закончился стёк, а закрывающие скобки всё прибывают
+    // Или является ли найденная скобка парой к открывающей скобке в конце стёка (самой глубокой)
+    if(!stack.length || brackets[stack.pop()] !== tmp[0]) return false;
+  
+  // Всё ОК
+  return true; 
     
 }
